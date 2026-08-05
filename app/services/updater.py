@@ -1,12 +1,12 @@
 import base64
 
+from datetime import datetime
+
+
 import json
 
+
 import requests
-
-
-
-from datetime import datetime
 
 
 
@@ -32,14 +32,10 @@ from app.services.parser import parse_node
 
 
 
-# =========================
-# 获取订阅内容
-# =========================
-
-def fetch_subscription(url: str):
+def fetch_subscription(url):
 
 
-    response = requests.get(
+    r=requests.get(
 
         url,
 
@@ -56,29 +52,25 @@ def fetch_subscription(url: str):
     )
 
 
-    response.raise_for_status()
+    r.raise_for_status()
 
 
-    return response.text
-
-
-
+    return r.text
 
 
 
 
-# =========================
-# 解码
-# =========================
-
-def decode_content(content: str):
-
-
-    content = content.strip()
 
 
 
-    # 已经是明文URL
+
+
+def decode_content(content):
+
+
+    content=content.strip()
+
+
 
     if "://" in content:
 
@@ -86,27 +78,20 @@ def decode_content(content: str):
 
 
 
-
-
     try:
 
 
-        decoded = base64.b64decode(
+        return base64.b64decode(
 
-            content +
+            content
+
+            +
 
             "=" *
 
-            (-len(content) % 4)
+            (-len(content)%4)
 
-        ).decode(
-
-            "utf-8"
-
-        )
-
-
-        return decoded
+        ).decode()
 
 
 
@@ -121,15 +106,12 @@ def decode_content(content: str):
 
 
 
-# =========================
-# 分割节点
-# =========================
 
-def extract_nodes(content: str):
+
+def extract_nodes(content):
 
 
     result=[]
-
 
 
     for line in content.splitlines():
@@ -139,20 +121,19 @@ def extract_nodes(content: str):
 
 
 
-        if not line:
+        if (
 
-            continue
+            line
+
+            and
+
+            "://" in line
+
+        ):
 
 
+            result.append(line)
 
-        if "://" in line:
-
-
-            result.append(
-
-                line
-
-            )
 
 
     return result
@@ -163,81 +144,147 @@ def extract_nodes(content: str):
 
 
 
-# =========================
-# 更新订阅
-# =========================
+
 
 def update_subscription(
 
-    db: Session,
+    db:Session,
 
-    subscription: Subscription
+    subscription:Subscription
 
 ):
 
 
-    content = fetch_subscription(
-
-        subscription.url
-
-    )
+    try:
 
 
+        content=fetch_subscription(
 
-    content = decode_content(
+            subscription.url
 
-        content
-
-    )
+        )
 
 
 
-    urls = extract_nodes(
+        content=decode_content(
 
-        content
+            content
 
-    )
-
-
+        )
 
 
 
-    # 删除旧节点
+        urls=extract_nodes(
 
-    db.query(
+            content
 
-        Node
-
-    ).filter(
-
-        Node.subscription_id
-
-        ==
-
-        subscription.id
-
-    ).delete()
+        )
 
 
 
+        if not urls:
 
 
-    count=0
+            return {
+
+
+                "success":False,
+
+
+                "message":
+
+                "empty subscription"
+
+            }
 
 
 
-    for url in urls:
 
 
-        try:
 
 
-            outbound=parse_node(
+        new_nodes=[]
 
-                url
 
-            )
 
+        for url in urls:
+
+
+            try:
+
+
+                outbound=parse_node(
+
+                    url
+
+                )
+
+
+                new_nodes.append(
+
+                    outbound
+
+                )
+
+
+
+            except Exception:
+
+
+                continue
+
+
+
+
+
+        if not new_nodes:
+
+
+            return {
+
+
+                "success":False,
+
+
+                "message":
+
+                "no valid nodes"
+
+            }
+
+
+
+
+
+
+
+
+
+        # 成功后才删除旧节点
+
+        db.query(
+
+            Node
+
+        ).filter(
+
+            Node.subscription_id
+
+            ==
+
+            subscription.id
+
+        ).delete()
+
+
+
+
+
+
+
+
+
+        for outbound in new_nodes:
 
 
             node=Node(
@@ -302,7 +349,6 @@ def update_subscription(
             )
 
 
-
             db.add(
 
                 node
@@ -310,39 +356,57 @@ def update_subscription(
             )
 
 
-            count += 1
-
-
-
-        except Exception:
-
-
-            # 单节点失败跳过
-
-            continue
 
 
 
 
 
-    subscription.last_update = (
+        subscription.last_update=(
 
-        datetime.utcnow()
+            datetime.utcnow()
 
-    )
-
-
-
-    db.commit()
+        )
 
 
 
-    return {
+        db.commit()
 
 
-        "success": True,
+
+        return {
 
 
-        "nodes": count
+            "success":True,
 
-    }
+
+            "nodes":
+
+            len(new_nodes)
+
+        }
+
+
+
+
+
+
+
+    except Exception as e:
+
+
+
+        db.rollback()
+
+
+
+        return {
+
+
+            "success":False,
+
+
+            "message":
+
+            str(e)
+
+        }
