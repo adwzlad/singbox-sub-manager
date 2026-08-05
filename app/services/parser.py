@@ -1,8 +1,28 @@
+from urllib.parse import urlsplit, parse_qs
+
 import base64
 
 import json
 
-import urllib.parse
+
+
+
+
+
+
+def params(url):
+
+    return {
+
+        k:v[0]
+
+        for k,v in parse_qs(
+
+            urlsplit(url).query
+
+        ).items()
+
+    }
 
 
 
@@ -10,78 +30,121 @@ import urllib.parse
 
 
 
-def parse_params(url):
 
-    return dict(
-
-        urllib.parse.parse_qsl(
-
-            urllib.parse.urlsplit(url).query
-
-        )
-
-    )
-
-
-
-
-
-
-
-
-
-# =========================
-# VLESS
-# =========================
 
 def parse_vless(url):
 
 
-    u = urllib.parse.urlsplit(url)
+    u=urlsplit(url)
+
+    p=params(url)
 
 
-    params = parse_params(url)
+
+    tls={
+
+        "enabled":
+
+        p.get("security") in [
+
+            "tls",
+
+            "reality"
+
+        ]
+
+    }
+
+
+
+    if p.get("sni"):
+
+        tls["server_name"]=p["sni"]
+
+
+
+
+
+    if p.get("security")=="reality":
+
+
+        tls["utls"]={
+
+            "enabled":True
+
+        }
+
+
+        tls["reality"]={
+
+            "enabled":True,
+
+
+            "public_key":
+
+            p.get("pbk"),
+
+
+
+            "short_id":
+
+            p.get("sid","")
+
+        }
+
+
+
+
+
+    return {
+
+        "type":"vless",
+
+        "server":u.hostname,
+
+        "server_port":u.port,
+
+        "uuid":u.username,
+
+        "tls":tls
+
+    }
+
+
+
+
+
+
+
+
+
+def parse_trojan(url):
+
+
+    u=urlsplit(url)
+
+    p=params(url)
 
 
 
     return {
 
 
-        "type": "vless",
+        "type":"trojan",
 
+        "server":u.hostname,
 
-        "server": u.hostname,
+        "server_port":u.port,
 
+        "password":u.username,
 
-        "server_port": u.port,
+        "tls":{
 
-
-        "uuid": u.username,
-
-
-
-        "tls": {
-
-
-            "enabled":
-
-            params.get(
-
-                "security"
-
-            ) in [
-
-                "tls",
-
-                "reality"
-
-            ],
-
-
+            "enabled":True,
 
             "server_name":
 
-            params.get(
+            p.get(
 
                 "sni",
 
@@ -101,14 +164,149 @@ def parse_vless(url):
 
 
 
-# =========================
-# VMess
-# =========================
+def parse_tuic(url):
+
+
+    u=urlsplit(url)
+
+
+
+    return {
+
+
+        "type":"tuic",
+
+        "server":u.hostname,
+
+        "server_port":u.port,
+
+        "uuid":u.username,
+
+        "password":u.password,
+
+        "congestion_control":"bbr",
+
+
+        "tls":{
+
+            "enabled":True
+
+        }
+
+    }
+
+
+
+
+
+
+
+
+
+def parse_hysteria2(url):
+
+
+    u=urlsplit(url)
+
+    p=params(url)
+
+
+
+    return {
+
+
+        "type":"hysteria2",
+
+        "server":u.hostname,
+
+        "server_port":u.port,
+
+        "password":u.username,
+
+
+        "tls":{
+
+            "enabled":True,
+
+            "server_name":
+
+            p.get(
+
+                "sni",
+
+                u.hostname
+
+            )
+
+        }
+
+    }
+
+
+
+
+
+
+
+
+
+def parse_anytls(url):
+
+
+    u=urlsplit(url)
+
+    p=params(url)
+
+
+
+    return {
+
+
+        "type":"anytls",
+
+        "server":u.hostname,
+
+        "server_port":u.port,
+
+        "password":u.username,
+
+
+        "tls":{
+
+            "enabled":
+
+            p.get(
+
+                "security"
+
+            )=="tls",
+
+            "server_name":
+
+            p.get(
+
+                "sni",
+
+                u.hostname
+
+            )
+
+        }
+
+    }
+
+
+
+
+
+
+
+
 
 def parse_vmess(url):
 
 
-    data=url.replace(
+    raw=url.replace(
 
         "vmess://",
 
@@ -117,22 +315,18 @@ def parse_vmess(url):
     )
 
 
+    data=base64.b64decode(
 
-    raw=base64.b64decode(
+        raw+"="*
 
-        data +
-
-        "=" *
-
-        (-len(data)%4)
+        (-len(raw)%4)
 
     )
 
 
-
     obj=json.loads(
 
-        raw.decode()
+        data
 
     )
 
@@ -143,17 +337,14 @@ def parse_vmess(url):
 
         "type":"vmess",
 
-
         "server":
 
         obj["add"],
 
 
-
         "server_port":
 
         int(obj["port"]),
-
 
 
         "uuid":
@@ -170,401 +361,34 @@ def parse_vmess(url):
 
 
 
-# =========================
-# Trojan
-# =========================
-
-def parse_trojan(url):
-
-
-    u=urllib.parse.urlsplit(url)
-
-
-    params=parse_params(url)
-
-
-
-    return {
-
-
-        "type":"trojan",
-
-
-        "server":
-
-        u.hostname,
-
-
-
-        "server_port":
-
-        u.port,
-
-
-
-        "password":
-
-        u.username,
-
-
-
-        "tls":{
-
-
-            "enabled":True,
-
-
-            "server_name":
-
-            params.get(
-
-                "sni",
-
-                u.hostname
-
-            )
-
-        }
-
-    }
-
-
-
-
-
-
-
-
-
-# =========================
-# TUIC
-# =========================
-
-def parse_tuic(url):
-
-
-    u=urllib.parse.urlsplit(url)
-
-
-    params=parse_params(url)
-
-
-
-    return {
-
-
-        "type":"tuic",
-
-
-        "server":
-
-        u.hostname,
-
-
-
-        "server_port":
-
-        u.port,
-
-
-
-        "uuid":
-
-        u.username,
-
-
-
-        "password":
-
-        u.password,
-
-
-
-        "tls":{
-
-
-            "enabled":True,
-
-
-            "server_name":
-
-            params.get(
-
-                "sni",
-
-                u.hostname
-
-            )
-
-        }
-
-    }
-
-
-
-
-
-
-
-
-
-# =========================
-# Hysteria2
-# =========================
-
-def parse_hysteria2(url):
-
-
-    u=urllib.parse.urlsplit(url)
-
-
-    params=parse_params(url)
-
-
-
-    return {
-
-
-        "type":"hysteria2",
-
-
-        "server":
-
-        u.hostname,
-
-
-
-        "server_port":
-
-        u.port,
-
-
-
-        "password":
-
-        u.username,
-
-
-
-        "tls":{
-
-
-            "enabled":True,
-
-
-            "server_name":
-
-            params.get(
-
-                "sni",
-
-                u.hostname
-
-            )
-
-        }
-
-    }
-
-
-
-
-
-
-
-
-
-# =========================
-# AnyTLS
-# =========================
-
-def parse_anytls(url):
-
-
-    u=urllib.parse.urlsplit(url)
-
-
-    params=parse_params(url)
-
-
-
-    return {
-
-
-        "type":"anytls",
-
-
-        "server":
-
-        u.hostname,
-
-
-
-        "server_port":
-
-        u.port,
-
-
-
-        "password":
-
-        u.username,
-
-
-
-        "tls":{
-
-
-            "enabled":
-
-            params.get(
-
-                "security"
-
-            )=="tls",
-
-
-
-            "server_name":
-
-            params.get(
-
-                "sni",
-
-                u.hostname
-
-            )
-
-        }
-
-    }
-
-
-
-
-
-
-
-
-
-# =========================
-# Shadowsocks
-# =========================
-
-def parse_ss(url):
-
-
-    data=url.replace(
-
-        "ss://",
-
-        ""
-
-    )
-
-
-
-    data=data.split("#")[0]
-
-
-
-    raw=base64.b64decode(
-
-        data +
-
-        "=" *
-
-        (-len(data)%4)
-
-    ).decode()
-
-
-
-    method_pwd,server=raw.rsplit(
-
-        "@",
-
-        1
-
-    )
-
-
-
-    method,password=method_pwd.split(
-
-        ":",
-
-        1
-
-    )
-
-
-
-    host,port=server.split(
-
-        ":"
-
-    )
-
-
-
-    return {
-
-
-        "type":"shadowsocks",
-
-
-        "server":host,
-
-
-        "server_port":int(port),
-
-
-        "method":method,
-
-
-        "password":password
-
-    }
-
-
-
-
-
-
-
-
-
-# =========================
-# 主入口
-# =========================
-
 def parse_node(url):
 
 
-    url=url.strip()
+    if url.startswith(
 
+        "vless://"
 
-
-    if url.startswith("vless://"):
+    ):
 
         return parse_vless(url)
 
 
 
-    if url.startswith("vmess://"):
+    if url.startswith(
 
-        return parse_vmess(url)
+        "trojan://"
 
-
-
-    if url.startswith("trojan://"):
+    ):
 
         return parse_trojan(url)
 
 
 
-    if url.startswith("tuic://"):
+    if url.startswith(
+
+        "tuic://"
+
+    ):
 
         return parse_tuic(url)
 
@@ -572,11 +396,19 @@ def parse_node(url):
 
     if (
 
-        url.startswith("hysteria2://")
+        url.startswith(
+
+            "hysteria2://"
+
+        )
 
         or
 
-        url.startswith("hy2://")
+        url.startswith(
+
+            "hy2://"
+
+        )
 
     ):
 
@@ -584,20 +416,28 @@ def parse_node(url):
 
 
 
-    if url.startswith("anytls://"):
+    if url.startswith(
+
+        "anytls://"
+
+    ):
 
         return parse_anytls(url)
 
 
 
-    if url.startswith("ss://"):
+    if url.startswith(
 
-        return parse_ss(url)
+        "vmess://"
+
+    ):
+
+        return parse_vmess(url)
 
 
 
     raise ValueError(
 
-        "Unsupported node protocol"
+        "unsupported protocol"
 
     )
