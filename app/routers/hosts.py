@@ -2,11 +2,10 @@ from fastapi import (
 
     APIRouter,
 
-    Depends,
-
-    HTTPException
+    Depends
 
 )
+
 
 
 from sqlalchemy.orm import Session
@@ -51,14 +50,14 @@ router = APIRouter(
 
 def list_hosts(
 
-    db: Session = Depends(get_db),
+    db:Session=Depends(get_db),
 
-    _ = Depends(verify_admin_key)
+    _=Depends(verify_admin_key)
 
 ):
 
 
-    hosts = db.query(
+    hosts=db.query(
 
         Host
 
@@ -71,18 +70,19 @@ def list_hosts(
         {
 
 
-            "id": h.id,
+            "id":h.id,
 
 
-            "domain": h.domain,
+            "domain":h.domain,
 
 
-            "ip": h.ip,
+            "ip":h.ip,
 
 
-            "enabled": h.enabled
+            "enabled":h.enabled
 
         }
+
 
         for h in hosts
 
@@ -104,49 +104,31 @@ def list_hosts(
 
 def add_host(
 
-    domain: str,
+    data:dict,
 
-    ip: str,
+    db:Session=Depends(get_db),
 
-    db: Session = Depends(get_db),
-
-    _ = Depends(verify_admin_key)
+    _=Depends(verify_admin_key)
 
 ):
 
 
-    exists=db.query(
-
-        Host
-
-    ).filter(
-
-        Host.domain == domain
-
-    ).first()
-
-
-
-    if exists:
-
-
-        raise HTTPException(
-
-            status_code=400,
-
-            detail="host already exists"
-
-        )
-
-
-
-
-
     host=Host(
 
-        domain=domain,
 
-        ip=ip
+        domain=data.get(
+
+            "domain"
+
+        ),
+
+
+
+        ip=data.get(
+
+            "ip"
+
+        )
 
     )
 
@@ -174,13 +156,13 @@ def add_host(
     return {
 
 
-        "id": host.id,
+        "id":host.id,
 
 
-        "domain": host.domain,
+        "domain":host.domain,
 
 
-        "ip": host.ip
+        "ip":host.ip
 
     }
 
@@ -219,33 +201,23 @@ def delete_host(
 
     ).filter(
 
-        Host.id == host_id
+        Host.id==host_id
 
     ).first()
 
 
 
-    if not host:
+    if host:
 
 
-        raise HTTPException(
+        db.delete(
 
-            status_code=404,
-
-            detail="host not found"
+            host
 
         )
 
 
-
-    db.delete(
-
-        host
-
-    )
-
-
-    db.commit()
+        db.commit()
 
 
 
