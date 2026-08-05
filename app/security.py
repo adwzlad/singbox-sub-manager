@@ -1,10 +1,6 @@
-from secrets import (
+import secrets
 
-    token_urlsafe,
-
-    compare_digest
-
-)
+import hashlib
 
 
 
@@ -26,17 +22,15 @@ from app.config import settings
 
 
 
+
+
 # =========================
-# 管理后台KEY验证
+# 管理KEY验证
 # =========================
 
 def verify_admin_key(
 
-    x_admin_key: str = Header(
-
-        default=None
-
-    )
+    x_admin_key: str = Header(None)
 
 ):
 
@@ -48,27 +42,22 @@ def verify_admin_key(
 
             status_code=401,
 
-            detail="Missing admin key"
+            detail="missing admin key"
 
         )
 
 
 
 
-    if not compare_digest(
 
-        x_admin_key,
-
-        settings.ADMIN_KEY
-
-    ):
+    if x_admin_key != settings.ADMIN_KEY:
 
 
         raise HTTPException(
 
             status_code=403,
 
-            detail="Invalid admin key"
+            detail="invalid admin key"
 
         )
 
@@ -82,15 +71,17 @@ def verify_admin_key(
 
 
 
+
+
 # =========================
-# 生成SUB TOKEN
+# 创建SUB TOKEN
 # =========================
 
 def create_token():
 
 
 
-    return token_urlsafe(
+    token = secrets.token_urlsafe(
 
         32
 
@@ -98,6 +89,10 @@ def create_token():
 
 
 
+    return token
+
+
+
 
 
 
@@ -105,22 +100,18 @@ def create_token():
 
 
 # =========================
-# Token验证
+# Token哈希
 # =========================
 
-def check_token(
+def hash_token(
 
-    token: str,
-
-    saved_token: str
+    token:str
 
 ):
 
 
-    return compare_digest(
+    return hashlib.sha256(
 
-        token,
+        token.encode()
 
-        saved_token
-
-    )
+    ).hexdigest()
