@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>singbox-sub-manager</title>
+
+
+<link rel="stylesheet" href="/web/css/style.css">
+
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<h1>
+singbox-sub-manager
+</h1>
+
+
+<div class="card">
+
+
+<h2>
+管理认证
+</h2>
+
+
+<input
+id="adminKey"
+type="password"
+placeholder="输入 ADMIN_KEY"
+/>
+
+
+<button onclick="saveKey()">
+保存
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+功能
+</h2>
+
+
+<button onclick="loadNodes()">
+节点列表
+</button>
+
+
+<button onclick="loadTemplates()">
+模板管理
+</button>
+
+
+<button onclick="loadHosts()">
+Hosts管理
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+结果
+</h2>
+
+
+<pre id="result">
+等待操作...
+</pre>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<script src="/web/js/app.js"></script>
+
+
+</body>
+
+
+</html>
