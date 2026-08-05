@@ -1,17 +1,11 @@
-let adminKey = "";
-
-
-
-
-
 // =========================
-// 保存KEY
+// 保存 ADMIN_KEY
 // =========================
 
 function saveKey(){
 
 
-    adminKey = document
+    const key = document
 
         .getElementById(
 
@@ -27,7 +21,7 @@ function saveKey(){
 
         "adminKey",
 
-        adminKey
+        key
 
     );
 
@@ -36,156 +30,6 @@ function saveKey(){
     showResult(
 
         "ADMIN_KEY 已保存"
-
-    );
-
-}
-
-
-
-
-
-
-
-
-
-// =========================
-// 请求API
-// =========================
-
-async function apiRequest(
-
-    url,
-
-    method="GET"
-
-){
-
-
-    if(!adminKey){
-
-
-        adminKey = localStorage.getItem(
-
-            "adminKey"
-
-        );
-
-    }
-
-
-
-
-
-    let response = await fetch(
-
-        url,
-
-        {
-
-            method:method,
-
-
-            headers:{
-
-
-                "X-Admin-Key":
-
-                adminKey
-
-            }
-
-        }
-
-    );
-
-
-
-    let data = await response.json();
-
-
-
-    showResult(
-
-        JSON.stringify(
-
-            data,
-
-            null,
-
-            2
-
-        )
-
-    );
-
-
-}
-
-
-
-
-
-
-
-
-
-// =========================
-// 节点
-// =========================
-
-function loadNodes(){
-
-
-    apiRequest(
-
-        "/nodes"
-
-    );
-
-}
-
-
-
-
-
-
-
-
-
-// =========================
-// 模板
-// =========================
-
-function loadTemplates(){
-
-
-    apiRequest(
-
-        "/templates"
-
-    );
-
-}
-
-
-
-
-
-
-
-
-
-// =========================
-// Hosts
-// =========================
-
-function loadHosts(){
-
-
-    apiRequest(
-
-        "/hosts"
 
     );
 
@@ -210,11 +54,15 @@ function showResult(
 ){
 
 
-    document.getElementById(
+    document
 
-        "result"
+        .getElementById(
 
-    ).textContent=text;
+            "result"
+
+        )
+
+        .textContent = text;
 
 }
 
@@ -227,16 +75,34 @@ function showResult(
 
 
 // =========================
-// 初始化
+// 页面初始化
 // =========================
 
-window.onload=function(){
+window.onload = function(){
 
 
-    adminKey = localStorage.getItem(
+    const key = localStorage.getItem(
 
         "adminKey"
 
-    ) || "";
+    );
+
+
+
+    if(key){
+
+
+        document
+
+            .getElementById(
+
+                "adminKey"
+
+            )
+
+            .value = key;
+
+
+    }
 
 };
