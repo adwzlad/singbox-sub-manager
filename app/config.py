@@ -1,76 +1,130 @@
+import os
+
 from pathlib import Path
 
-from pydantic_settings import BaseSettings
 
 
 
 
 
+
+# =========================
 # 项目根目录
+# =========================
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(
 
+    __file__
 
-
-
-
-class Settings(BaseSettings):
-
-
-    # =====================
-    # 项目信息
-    # =====================
-
-    APP_NAME: str = "singbox-sub-manager"
-
-
-    VERSION: str = "1.0.0"
+).resolve().parent.parent
 
 
 
 
 
-    # =====================
-    # 服务
-    # =====================
-
-    HOST: str = "0.0.0.0"
 
 
-    PORT: int = 8080
+# =========================
+# 数据目录
+# =========================
+
+DATA_DIR = Path(
+
+    os.getenv(
+
+        "DATA_DIR",
+
+        BASE_DIR / "data"
+
+    )
+
+)
 
 
 
 
 
-    # =====================
+DATA_DIR.mkdir(
+
+    parents=True,
+
+    exist_ok=True
+
+)
+
+
+
+
+
+
+
+
+
+# =========================
+# 配置输出目录
+# =========================
+
+CONFIG_DIR = DATA_DIR / "configs"
+
+
+
+CONFIG_DIR.mkdir(
+
+    parents=True,
+
+    exist_ok=True
+
+)
+
+
+
+
+
+
+
+
+
+class Settings:
+
+
+
+    APP_NAME = os.getenv(
+
+        "APP_NAME",
+
+        "singbox-sub-manager"
+
+    )
+
+
+
+    VERSION = os.getenv(
+
+        "VERSION",
+
+        "1.0.0"
+
+    )
+
+
+
+
+
+    # 数据库
+
+    DATABASE_FILE = DATA_DIR / "app.db"
+
+
+
+
+
     # 管理KEY
-    # =====================
 
-    ADMIN_KEY: str = "change-me"
+    ADMIN_KEY = os.getenv(
 
+        "ADMIN_KEY",
 
-
-
-
-    # =====================
-    # 数据目录
-    # =====================
-
-    DATA_DIR: Path = BASE_DIR / "data"
-
-
-    DATABASE_FILE: Path = (
-
-        BASE_DIR
-
-        /
-
-        "data"
-
-        /
-
-        "app.db"
+        "change-me"
 
     )
 
@@ -78,17 +132,13 @@ class Settings(BaseSettings):
 
 
 
-    # =====================
     # Web目录
-    # =====================
 
-    WEB_DIR: Path = (
+    WEB_DIR = os.getenv(
 
-        BASE_DIR
+        "WEB_DIR",
 
-        /
-
-        "web"
+        BASE_DIR / "web"
 
     )
 
@@ -96,75 +146,14 @@ class Settings(BaseSettings):
 
 
 
-    # =====================
-    # 文件目录
-    # =====================
+    # 配置目录
 
-    TEMPLATE_DIR: Path = (
-
-        BASE_DIR
-
-        /
-
-        "data"
-
-        /
-
-        "templates"
-
-    )
+    CONFIG_DIR = CONFIG_DIR
 
 
-    CONFIG_DIR: Path = (
-
-        BASE_DIR
-
-        /
-
-        "data"
-
-        /
-
-        "configs"
-
-    )
-
-
-
-
-
-    class Config:
-
-        env_file = ".env"
 
 
 
 
 
 settings = Settings()
-
-
-
-
-
-# 初始化目录
-
-settings.DATA_DIR.mkdir(
-
-    exist_ok=True
-
-)
-
-
-settings.TEMPLATE_DIR.mkdir(
-
-    exist_ok=True
-
-)
-
-
-settings.CONFIG_DIR.mkdir(
-
-    exist_ok=True
-
-)
