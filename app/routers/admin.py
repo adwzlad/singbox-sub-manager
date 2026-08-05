@@ -7,14 +7,27 @@ from fastapi import (
 )
 
 
+from sqlalchemy.orm import Session
+
+
+
+from app.database import get_db
+
+
+from app.models import SubscriptionToken
+
 
 from app.security import (
 
     verify_admin_key,
 
-    create_token
+    create_token,
+
+    hash_token
 
 )
+
+
 
 
 
@@ -37,35 +50,78 @@ router = APIRouter(
 
 
 # =========================
-# 测试管理KEY
+# 创建订阅Token
 # =========================
 
-@router.get(
+@router.post(
 
-    "/check"
+    "/token/create"
 
 )
 
-def check_admin(
+def create_subscription_token(
 
-    _ = Depends(
+    name:str,
 
-        verify_admin_key
+    db:Session=Depends(get_db),
+
+    _=Depends(verify_admin_key)
+
+):
+
+
+    token=create_token()
+
+
+
+    record=SubscriptionToken(
+
+        name=name,
+
+        token_hash=hash_token(
+
+            token
+
+        )
 
     )
 
-):
+
+
+    db.add(
+
+        record
+
+    )
+
+
+    db.commit()
+
+
+
+    db.refresh(
+
+        record
+
+    )
+
 
 
     return {
 
 
-        "success": True,
+        "id":record.id,
 
 
-        "message":
+        "name":record.name,
 
-        "admin key ok"
+
+        "token":token,
+
+
+        "url":
+
+        "/sub/"+token
 
     }
 
@@ -78,33 +134,119 @@ def check_admin(
 
 
 # =========================
-# 创建SUB TOKEN
+# Token列表
 # =========================
 
-@router.post(
+@router.get(
 
-    "/token"
+    "/tokens"
 
 )
 
-def create_subscription_token(
+def list_tokens(
 
-    _ = Depends(
+    db:Session=Depends(get_db),
 
-        verify_admin_key
-
-    )
+    _=Depends(verify_admin_key)
 
 ):
 
 
-    token=create_token()
+    tokens=db.query(
+
+        SubscriptionToken
+
+    ).all()
+
+
+
+    return [
+
+        {
+
+
+            "id":t.id,
+
+
+            "name":t.name,
+
+
+            "enabled":t.enabled,
+
+
+            "created_at":
+
+            t.created_at
+
+        }
+
+
+        for t in tokens
+
+    ]
+
+
+
+
+
+
+
+
+
+# =========================
+# 删除Token
+# =========================
+
+@router.delete(
+
+    "/token/{token_id}"
+
+)
+
+def delete_token(
+
+    token_id:int,
+
+    db:Session=Depends(get_db),
+
+    _=Depends(verify_admin_key)
+
+):
+
+
+    token=db.query(
+
+        SubscriptionToken
+
+    ).filter(
+
+        SubscriptionToken.id
+
+        ==
+
+        token_id
+
+    ).first()
+
+
+
+    if token:
+
+
+        db.delete(
+
+            token
+
+        )
+
+
+        db.commit()
 
 
 
     return {
 
 
-        "token": token
+        "success":True
 
     }
