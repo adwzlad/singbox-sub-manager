@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 
+
 from sqlalchemy.orm import (
 
     sessionmaker,
@@ -22,12 +23,23 @@ from app.config import settings
 # SQLite连接
 # =========================
 
-
 DATABASE_URL = (
 
-    f"sqlite:///{settings.DATABASE_FILE}"
+    "sqlite:///"
+
+    +
+
+    str(
+
+        settings.DATABASE_FILE
+
+    )
 
 )
+
+
+
+
 
 
 
@@ -39,7 +51,9 @@ engine = create_engine(
 
     connect_args={
 
-        "check_same_thread": False
+        "check_same_thread":
+
+        False
 
     }
 
@@ -51,11 +65,6 @@ engine = create_engine(
 
 
 
-
-
-# =========================
-# Session
-# =========================
 
 
 SessionLocal = sessionmaker(
@@ -76,41 +85,7 @@ SessionLocal = sessionmaker(
 
 
 
-# =========================
-# ORM Base
-# =========================
-
-
 Base = declarative_base()
-
-
-
-
-
-
-
-
-
-
-# =========================
-# 获取数据库Session
-# =========================
-
-
-def get_db():
-
-    db = SessionLocal()
-
-
-    try:
-
-        yield db
-
-
-    finally:
-
-        db.close()
-
 
 
 
@@ -124,9 +99,10 @@ def get_db():
 # 初始化数据库
 # =========================
 
-
 def init_db():
 
+
+    # 确保模型注册
 
     from app import models
 
@@ -136,3 +112,34 @@ def init_db():
         bind=engine
 
     )
+
+
+
+
+
+
+
+
+
+# =========================
+# FastAPI依赖
+# =========================
+
+def get_db():
+
+
+    db = SessionLocal()
+
+
+
+    try:
+
+
+        yield db
+
+
+
+    finally:
+
+
+        db.close()
