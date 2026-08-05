@@ -27,6 +27,9 @@ singbox-sub-manager
 </h1>
 
 
+
+
+
 <div class="card">
 
 
@@ -43,7 +46,7 @@ placeholder="输入 ADMIN_KEY"
 
 
 <button onclick="saveKey()">
-保存
+保存 KEY
 </button>
 
 
@@ -53,26 +56,24 @@ placeholder="输入 ADMIN_KEY"
 
 
 
+
+
+
 <div class="card">
 
 
 <h2>
-功能
+节点管理
 </h2>
 
 
-<button onclick="loadNodes()">
+<button onclick="getNodes()">
 节点列表
 </button>
 
 
-<button onclick="loadTemplates()">
-模板管理
-</button>
-
-
-<button onclick="loadHosts()">
-Hosts管理
+<button onclick="getNodeCount()">
+节点数量
 </button>
 
 
@@ -82,11 +83,59 @@ Hosts管理
 
 
 
+
+
+
 <div class="card">
 
 
 <h2>
-结果
+模板管理
+</h2>
+
+
+<button onclick="getTemplates()">
+模板列表
+</button>
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+Hosts管理
+</h2>
+
+
+<button onclick="getHosts()">
+Hosts列表
+</button>
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+API返回
+
 </h2>
 
 
@@ -98,13 +147,28 @@ Hosts管理
 </div>
 
 
+
+
+
 </div>
 
 
 
 
 
+
+
+
+<script src="/web/js/api.js"></script>
+
+<script src="/web/js/nodes.js"></script>
+
+<script src="/web/js/templates.js"></script>
+
+<script src="/web/js/hosts.js"></script>
+
 <script src="/web/js/app.js"></script>
+
 
 
 </body>
