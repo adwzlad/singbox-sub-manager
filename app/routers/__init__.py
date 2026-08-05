@@ -1,0 +1,3 @@
+"""
+singbox-sub-manager routers
+"""
