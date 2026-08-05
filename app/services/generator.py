@@ -180,7 +180,11 @@ def generate_config(
 
 
 
-        outbound["tag"] = node.name
+        outbound["tag"] = (
+            node.name
+            or
+            f"{node.protocol}-{node.id}"
+        )
 
 
 
