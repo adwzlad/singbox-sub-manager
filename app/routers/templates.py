@@ -2,13 +2,7 @@ from fastapi import (
 
     APIRouter,
 
-    Depends,
-
-    HTTPException,
-
-    UploadFile,
-
-    File
+    Depends
 
 )
 
@@ -55,14 +49,14 @@ router = APIRouter(
 
 def list_templates(
 
-    db: Session = Depends(get_db),
+    db:Session=Depends(get_db),
 
-    _ = Depends(verify_admin_key)
+    _=Depends(verify_admin_key)
 
 ):
 
 
-    templates = db.query(
+    templates=db.query(
 
         Template
 
@@ -75,18 +69,19 @@ def list_templates(
         {
 
 
-            "id": t.id,
+            "id":t.id,
 
 
-            "name": t.name,
+            "name":t.name,
 
 
-            "version": t.version,
+            "version":t.version,
 
 
-            "enabled": t.enabled
+            "enabled":t.enabled
 
         }
+
 
         for t in templates
 
@@ -101,62 +96,52 @@ def list_templates(
 
 
 # =========================
-# 上传模板
+# 添加模板
 # =========================
 
-@router.post(
+@router.post("")
 
-    "/upload"
+def add_template(
 
-)
+    data:dict,
 
-async def upload_template(
+    db:Session=Depends(get_db),
 
-    file: UploadFile = File(...),
-
-    db: Session = Depends(get_db),
-
-    _ = Depends(verify_admin_key)
+    _=Depends(verify_admin_key)
 
 ):
 
 
-    content = await file.read()
+    template=Template(
+
+
+        name=data.get(
+
+            "name",
+
+            "default"
+
+        ),
 
 
 
-    try:
+        version=data.get(
+
+            "version",
+
+            "1"
+
+        ),
 
 
-        text = content.decode(
 
-            "utf-8"
+        content=data.get(
+
+            "content",
+
+            "{}"
 
         )
-
-
-
-    except Exception:
-
-
-        raise HTTPException(
-
-            status_code=400,
-
-            detail="invalid file"
-
-        )
-
-
-
-
-
-    template = Template(
-
-        name=file.filename,
-
-
-        content=text
 
     )
 
@@ -184,10 +169,7 @@ async def upload_template(
     return {
 
 
-        "id": template.id,
-
-
-        "name": template.name
+        "id":template.id
 
     }
 
@@ -226,39 +208,29 @@ def delete_template(
 
     ).filter(
 
-        Template.id == template_id
+        Template.id==template_id
 
     ).first()
 
 
 
-    if not template:
+    if template:
 
 
-        raise HTTPException(
+        db.delete(
 
-            status_code=404,
-
-            detail="template not found"
+            template
 
         )
 
 
-
-    db.delete(
-
-        template
-
-    )
-
-
-    db.commit()
+        db.commit()
 
 
 
     return {
 
 
-        "success": True
+        "success":True
 
     }
