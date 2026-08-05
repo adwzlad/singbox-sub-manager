@@ -2,11 +2,10 @@ from fastapi import (
 
     APIRouter,
 
-    Depends,
-
-    HTTPException
+    Depends
 
 )
+
 
 
 from sqlalchemy.orm import Session
@@ -16,23 +15,12 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 
 
-from app.models import (
-
-    Node,
-
-    Subscription
-
-)
+from app.models import Node
 
 
 from app.security import verify_admin_key
 
 
-from app.services.updater import (
-
-    update_subscription
-
-)
 
 
 
@@ -62,14 +50,14 @@ router = APIRouter(
 
 def list_nodes(
 
-    db: Session = Depends(get_db),
+    db:Session=Depends(get_db),
 
-    _ = Depends(verify_admin_key)
+    _=Depends(verify_admin_key)
 
 ):
 
 
-    nodes = db.query(
+    nodes=db.query(
 
         Node
 
@@ -82,24 +70,25 @@ def list_nodes(
         {
 
 
-            "id": node.id,
+            "id":node.id,
 
 
-            "name": node.name,
+            "name":node.name,
 
 
-            "protocol": node.protocol,
+            "protocol":node.protocol,
 
 
-            "server": node.server,
+            "server":node.server,
 
 
-            "port": node.port,
+            "port":node.port,
 
 
-            "enabled": node.enabled
+            "enabled":node.enabled
 
         }
+
 
         for node in nodes
 
@@ -117,13 +106,17 @@ def list_nodes(
 # 节点数量
 # =========================
 
-@router.get("/count")
+@router.get(
+
+    "/count"
+
+)
 
 def node_count(
 
-    db: Session = Depends(get_db),
+    db:Session=Depends(get_db),
 
-    _ = Depends(verify_admin_key)
+    _=Depends(verify_admin_key)
 
 ):
 
@@ -132,6 +125,10 @@ def node_count(
 
         Node
 
+    ).filter(
+
+        Node.enabled == True
+
     ).count()
 
 
@@ -139,7 +136,7 @@ def node_count(
     return {
 
 
-        "count": count
+        "count":count
 
     }
 
@@ -152,18 +149,18 @@ def node_count(
 
 
 # =========================
-# 刷新订阅
+# 删除节点
 # =========================
 
-@router.post(
+@router.delete(
 
-    "/refresh/{subscription_id}"
+    "/{node_id}"
 
 )
 
-def refresh_subscription(
+def delete_node(
 
-    subscription_id:int,
+    node_id:int,
 
     db:Session=Depends(get_db),
 
@@ -172,38 +169,35 @@ def refresh_subscription(
 ):
 
 
-    subscription=db.query(
+    node=db.query(
 
-        Subscription
+        Node
 
     ).filter(
 
-        Subscription.id == subscription_id
+        Node.id == node_id
 
     ).first()
 
 
 
-    if not subscription:
+    if node:
 
 
-        raise HTTPException(
+        db.delete(
 
-            status_code=404,
-
-            detail="subscription not found"
+            node
 
         )
 
 
-
-    result=update_subscription(
-
-        db,
-
-        subscription
-
-    )
+        db.commit()
 
 
-    return result
+
+    return {
+
+
+        "success":True
+
+    }
