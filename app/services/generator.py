@@ -1,9 +1,6 @@
 import json
 
-import os
-
 from datetime import datetime
-
 
 
 from sqlalchemy.orm import Session
@@ -23,7 +20,6 @@ from app.models import (
 )
 
 
-
 from app.config import settings
 
 
@@ -32,23 +28,13 @@ from app.config import settings
 
 
 
-# =========================
-# Hosts替换
-# =========================
+def replace_host(
 
-def replace_hosts(
-
-    outbound,
+    outbound: dict,
 
     hosts
 
 ):
-
-
-    if not hosts:
-
-        return outbound
-
 
 
     server = outbound.get(
@@ -56,6 +42,11 @@ def replace_hosts(
         "server"
 
     )
+
+
+    if not server:
+
+        return outbound
 
 
 
@@ -87,10 +78,6 @@ def replace_hosts(
 
 
 
-
-# =========================
-# 生成配置
-# =========================
 
 def generate_config(
 
@@ -128,6 +115,16 @@ def generate_config(
 
 
 
+    config = json.loads(
+
+        template.content
+
+    )
+
+
+
+
+
     nodes = db.query(
 
         Node
@@ -156,26 +153,16 @@ def generate_config(
 
 
 
+    outbounds = []
 
 
-    config = json.loads(
-
-        template.content
-
-    )
-
-
-
-
-
-    outbounds=[]
 
 
 
     for node in nodes:
 
 
-        outbound=json.loads(
+        outbound = json.loads(
 
             node.outbound
 
@@ -183,7 +170,7 @@ def generate_config(
 
 
 
-        outbound=replace_hosts(
+        outbound = replace_host(
 
             outbound,
 
@@ -193,7 +180,7 @@ def generate_config(
 
 
 
-        outbound["tag"]=node.name
+        outbound["tag"] = node.name
 
 
 
@@ -207,15 +194,58 @@ def generate_config(
 
 
 
+    # 保留模板基础出站
+
+    base_outbounds = []
+
+
+
+    for item in config.get(
+
+        "outbounds",
+
+        []
+
+    ):
+
+
+        if item.get(
+
+            "type"
+
+        ) not in [
+
+
+            "vless",
+
+            "vmess",
+
+            "trojan",
+
+            "tuic",
+
+            "hysteria2",
+
+            "anytls",
+
+            "shadowsocks"
+
+        ]:
+
+
+            base_outbounds.append(
+
+                item
+
+            )
+
+
+
+
+
     config["outbounds"] = (
 
-        config.get(
-
-            "outbounds",
-
-            []
-
-        )
+        base_outbounds
 
         +
 
@@ -229,11 +259,29 @@ def generate_config(
 
 
 
-    filename=(
 
-        f"{name}_"
 
-        f"{int(datetime.utcnow().timestamp())}"
+    filename = (
+
+        name
+
+        +
+
+        "_"
+
+        +
+
+        str(
+
+            int(
+
+                datetime.utcnow().timestamp()
+
+            )
+
+        )
+
+        +
 
         ".json"
 
@@ -241,7 +289,7 @@ def generate_config(
 
 
 
-    filepath=(
+    filepath = (
 
         settings.CONFIG_DIR
 
@@ -282,22 +330,13 @@ def generate_config(
 
 
 
-
-
-    record=Config(
-
+    record = Config(
 
         name=name,
 
-
         template_id=template_id,
 
-
-        file_path=str(
-
-            filepath
-
-        )
+        file_path=str(filepath)
 
     )
 
