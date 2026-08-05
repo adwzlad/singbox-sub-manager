@@ -1,27 +1,42 @@
 import json
 
 
-from fastapi import (
-
-    APIRouter,
-
-    HTTPException
-
-)
-
-
-from fastapi.responses import (
-
-    JSONResponse
-
-)
-
-
 from pathlib import Path
 
 
 
+from fastapi import (
+
+    APIRouter,
+
+    HTTPException,
+
+    Depends
+
+)
+
+
+
+from fastapi.responses import JSONResponse
+
+
+
+from sqlalchemy.orm import Session
+
+
+
+from app.database import get_db
+
+
+from app.models import SubscriptionToken
+
+
+from app.security import hash_token
+
+
 from app.config import settings
+
+
 
 
 
@@ -43,10 +58,6 @@ router = APIRouter(
 
 
 
-# =========================
-# Token订阅
-# =========================
-
 @router.get(
 
     "/{token}"
@@ -55,22 +66,67 @@ router = APIRouter(
 
 def subscription(
 
-    token: str
+    token:str,
+
+    db:Session=Depends(get_db)
 
 ):
 
 
-    config_dir = Path(
+    token_hash = hash_token(
 
-        settings.CONFIG_DIR
+        token
 
     )
 
 
 
+
+
+    record = db.query(
+
+        SubscriptionToken
+
+    ).filter(
+
+        SubscriptionToken.token_hash
+
+        ==
+
+        token_hash
+
+    ).first()
+
+
+
+
+
+    if not record or not record.enabled:
+
+
+        raise HTTPException(
+
+            status_code=403,
+
+            detail="invalid token"
+
+        )
+
+
+
+
+
+
+
+
+
     files = sorted(
 
-        config_dir.glob(
+        Path(
+
+            settings.CONFIG_DIR
+
+        ).glob(
 
             "*.json"
 
@@ -101,15 +157,11 @@ def subscription(
 
 
 
-    config_file = files[0]
-
-
-
 
 
     with open(
 
-        config_file,
+        files[0],
 
         "r",
 
