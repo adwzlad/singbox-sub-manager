@@ -1,3 +1,7 @@
+from datetime import datetime
+
+
+
 from sqlalchemy import (
 
     Column,
@@ -17,10 +21,8 @@ from sqlalchemy import (
 )
 
 
+
 from sqlalchemy.orm import relationship
-
-
-from datetime import datetime
 
 
 
@@ -47,20 +49,17 @@ class Subscription(Base):
 
         Integer,
 
-        primary_key=True,
-
-        index=True
+        primary_key=True
 
     )
 
 
     name = Column(
 
-        String(128),
-
-        nullable=False
+        String(128)
 
     )
+
 
 
     url = Column(
@@ -81,15 +80,6 @@ class Subscription(Base):
     )
 
 
-    update_interval = Column(
-
-        Integer,
-
-        default=3600
-
-    )
-
-
     last_update = Column(
 
         DateTime
@@ -97,13 +87,6 @@ class Subscription(Base):
     )
 
 
-    created_at = Column(
-
-        DateTime,
-
-        default=datetime.utcnow
-
-    )
 
 
 
@@ -111,9 +94,7 @@ class Subscription(Base):
 
         "Node",
 
-        back_populates="subscription",
-
-        cascade="all, delete"
+        back_populates="subscription"
 
     )
 
@@ -145,6 +126,7 @@ class Node(Base):
     )
 
 
+
     subscription_id = Column(
 
         Integer,
@@ -158,11 +140,13 @@ class Node(Base):
     )
 
 
+
     name = Column(
 
         String(128)
 
     )
+
 
 
     protocol = Column(
@@ -172,11 +156,13 @@ class Node(Base):
     )
 
 
+
     server = Column(
 
         String(255)
 
     )
+
 
 
     port = Column(
@@ -186,11 +172,13 @@ class Node(Base):
     )
 
 
+
     outbound = Column(
 
         Text
 
     )
+
 
 
     enabled = Column(
@@ -202,13 +190,6 @@ class Node(Base):
     )
 
 
-    created_at = Column(
-
-        DateTime,
-
-        default=datetime.utcnow
-
-    )
 
 
 
@@ -229,13 +210,13 @@ class Node(Base):
 
 
 # =========================
-# sing-box模板
+# 模板
 # =========================
 
 class Template(Base):
 
 
-    __tablename__ = "templates"
+    __tablename__="templates"
 
 
 
@@ -248,22 +229,23 @@ class Template(Base):
     )
 
 
+
     name = Column(
 
-        String(128),
-
-        nullable=False
+        String(128)
 
     )
+
 
 
     version = Column(
 
         String(32),
 
-        default="1.0"
+        default="1"
 
     )
+
 
 
     content = Column(
@@ -275,6 +257,7 @@ class Template(Base):
     )
 
 
+
     enabled = Column(
 
         Boolean,
@@ -284,15 +267,6 @@ class Template(Base):
     )
 
 
-    created_at = Column(
-
-        DateTime,
-
-        default=datetime.utcnow
-
-    )
-
-
 
 
 
@@ -301,13 +275,13 @@ class Template(Base):
 
 
 # =========================
-# Hosts映射
+# Hosts
 # =========================
 
 class Host(Base):
 
 
-    __tablename__ = "hosts"
+    __tablename__="hosts"
 
 
 
@@ -320,22 +294,21 @@ class Host(Base):
     )
 
 
+
     domain = Column(
 
-        String(255),
-
-        unique=True,
-
-        index=True
+        String(255)
 
     )
+
 
 
     ip = Column(
 
-        String(128)
+        String(64)
 
     )
+
 
 
     enabled = Column(
@@ -343,15 +316,6 @@ class Host(Base):
         Boolean,
 
         default=True
-
-    )
-
-
-    created_at = Column(
-
-        DateTime,
-
-        default=datetime.utcnow
 
     )
 
@@ -370,7 +334,7 @@ class Host(Base):
 class Config(Base):
 
 
-    __tablename__ = "configs"
+    __tablename__="configs"
 
 
 
@@ -383,6 +347,7 @@ class Config(Base):
     )
 
 
+
     name = Column(
 
         String(128)
@@ -390,17 +355,13 @@ class Config(Base):
     )
 
 
+
     template_id = Column(
 
-        Integer,
-
-        ForeignKey(
-
-            "templates.id"
-
-        )
+        Integer
 
     )
+
 
 
     file_path = Column(
@@ -409,23 +370,6 @@ class Config(Base):
 
     )
 
-
-    version = Column(
-
-        Integer,
-
-        default=1
-
-    )
-
-
-    active = Column(
-
-        Boolean,
-
-        default=True
-
-    )
 
 
     created_at = Column(
@@ -437,8 +381,68 @@ class Config(Base):
     )
 
 
-    template = relationship(
 
-        "Template"
+
+
+
+
+
+
+# =========================
+# 订阅Token
+# =========================
+
+class SubscriptionToken(Base):
+
+
+    __tablename__="subscription_tokens"
+
+
+
+    id = Column(
+
+        Integer,
+
+        primary_key=True
+
+    )
+
+
+
+    name = Column(
+
+        String(128)
+
+    )
+
+
+
+    token_hash = Column(
+
+        String(64),
+
+        unique=True,
+
+        nullable=False
+
+    )
+
+
+
+    enabled = Column(
+
+        Boolean,
+
+        default=True
+
+    )
+
+
+
+    created_at = Column(
+
+        DateTime,
+
+        default=datetime.utcnow
 
     )
